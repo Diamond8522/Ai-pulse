@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Pulse | Is AI Down?</title>
+    <style>
+        :root { --bg: #111; --card: #222; --text: #eee; --green: #4caf50; --red: #f44336; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { margin-bottom: 30px; letter-spacing: -1px; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .status { width: 12px; height: 12px; border-radius: 50%; background: #666; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .operational { background: var(--green); box-shadow: 0 0 10px var(--green); }
+        .down { background: var(--red); box-shadow: 0 0 10px var(--red); }
+        .footer { margin-top: 50px; opacity: 0.6; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <h1>AI PULSE ⚡</h1>
+    
+    <div class="grid" id="dashboard">
+        <div class="card">Loading sensors...</div>
+    </div>
+
+    <div class="footer">
+        Updated: <span id="last-update">...</span>
+    </div>
+
+    <script>
+        // The Secret Sauce: Public Status JSON endpoints
+        const services = [
+            { name: "OpenAI (ChatGPT)", url: "https://status.openai.com/api/v2/status.json" },
+            { name: "Anthropic (Claude)", url: "https://status.anthropic.com/api/v2/status.json" },
+            { name: "GitHub Copilot", url: "https://www.githubstatus.com/api/v2/status.json" }
+        ];
+
+        async function checkStatus() {
+            const container = document.getElementById('dashboard');
+            container.innerHTML = ''; // Clear loading
+
+            for (let service of services) {
+                try {
+                    const response = await fetch(service.url);
+                    const data = await response.json();
+                    
+                    // Logic: "operational" usually means good
+                    const isGood = data.status.indicator === "none" || data.status.description === "All Systems Operational";
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <strong>${service.name}</strong>
+                        <div class="status ${isGood ? 'operational' : 'down'}"></div>
+                    `;
+                    container.appendChild(card);
+                } catch (e) {
+                    // Fallback if fetch fails
+                    container.innerHTML += `<div class="card"><strong>${service.name}</strong><span style="color:yellow">Error</span></div>`;
+                }
+            }
+            
+            document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
+        }
+
+        checkStatus();
+        // Auto-refresh every 60 seconds
+        setInterval(checkStatus, 60000);
+    </script>
+</body>
+</html>
+
